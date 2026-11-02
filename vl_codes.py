@@ -13,11 +13,13 @@ def shannon_fano(p):
     # step 1: initialise f to be a list with one element 0 (this is because Shannon
     # requires the cumulative probability to be the sum up to AND EXCLUDING the current
     # symbol, so the first element of f should be zero.
+    f = [0]
     
     # ... (whenever you see "..." you are expected to complete a missing command
 
     # step 2: compute the runninng sum
     for a in p: # for every probability in p
+        f.append(f[-1] + p[a])
         # you now want to append to f the sum of its last entry (which you can access as [-1])
         # and the probability p[a] of the current symbol
 
@@ -25,7 +27,7 @@ def shannon_fano(p):
 
     # the resulting cumulative has one too many element at the end, the sum of all probabilities
     # that should equal to one. You can use the "pop" command to delete the last element in a list.
-
+    f.pop(-1)
     # ...
 
     # We now convert the list you computed into a dictionary
@@ -40,23 +42,25 @@ def shannon_fano(p):
         # from the math library
         #...
         # (assign variable name "length")
+        length = ceil(log2(1/p[a]))
 
         codeword = [] # initialise current codeword
         myf = f[a]
         # for each position in length, we will multiply myf by 2 and take the
         # integral part as our binary digit
-        for pos in range(length):
+        for _ in range(length):
             # multiply myf by 2 (shifting it "left" in binary)
-            #...
+            myf *= 2
 
             # if the resulting myf is larger than 1, append a 1 to the codeword,
             # whereas if it is smaller than 1 you should append a 0
             # If it is larger than 1, you sould also substratct 1 from myf.
-            #...
-            #...
-            #...
-            #...
-            #...
+            if myf >= 1:
+                codeword.append(1)
+                myf -= 1
+            else:
+                codeword.append(0)
+
         code[a] = codeword # assign the codeword
         
     return code # return the code table
