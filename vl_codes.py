@@ -89,11 +89,11 @@ def huffman(p):
         # second entry from a tuple.) Note that the natural order of "sorted" is
         # increasing, which is as you want it in this case.
         # The output of sorted() can be written back to p (i.e. p = sorted(p, ....))
-        #...
+        p = sorted(p, key=lambda el: el[1]) #sort by value not by key, default=asc
 
         # Now append a new node to the tree xt with no parent (parent = -1),
         # no children (children = []) and label str(nodelabel)
-        #...
+        xt.append([-1, [], str(nodelabel)])
 
         # we incrase the variable nodelabel by 1 for its next use
         nodelabel += 1
@@ -103,17 +103,18 @@ def huffman(p):
         # pointers to nodes in xt are p[0][0] and p[1][0]. The corresponding
         # xt nodes should be assigned the new node you created as a parent,
         # whose index is len(xt)-1 since it has been appended at the end of xt
-        #...
-        #...
-        
+        xt[p[0][0]][0] = len(xt) - 1
+        xt[p[1][0]][0] = len(xt) - 1
+
         # assign the children of new node to be the nodes pointed to by
         # p[0] and p[1]. Note that the new node can be addressed as xt[-1]
-        #...
+        xt[-1][1].append(p[0][0])
+        xt[-1][1].append(p[1][0])
 
         # create a new entry pointing to the new node in the list of probabilities
         # This new entry should be a tuple with len(xt)-1 as its first element,
         # and the sum of the probabilities in p[0] and p[1] as its second element
-        #...
+        p.append((len(xt)-1, p[0][1] + p[1][1]))
 
         # remove the two nodes with the smallest probability
         p.pop(0)
