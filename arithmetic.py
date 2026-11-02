@@ -14,12 +14,12 @@ def encode(x, p):
 
     # Compute cumulative probability as in Shannon-Fano but WITHOUT
     # sorting the probability distrbution
-    # ...
-    # ...
-    # ...
-    # ...
-    f = dict([(a,mf) for a,mf in zip(p,f)])
-    
+    f = [0]
+    for a in p:
+        f.append(f[-1]+p[a])
+    f.pop()
+    f = dict(zip(p, f))
+
     y = [] # initialise output list
     lo,hi = 0,one # initialise lo and hi to be [0,1.0)
     straddle = 0 # initialise the straddle counter to 0
@@ -35,7 +35,7 @@ def encode(x, p):
 
         # 1) calculate the interval range to be the difference between hi and lo and 
         # add 1 to the difference. The added 1 is necessary to avoid rounding issues
-        # lohi_range = ....
+        lohi_range = hi-lo + 1
 
         # 2) narrow the interval end-points [lo,hi) to the new range [f,f+p]
         # within the old interval [lo,hi], being careful to round 'innwards' so
@@ -43,8 +43,9 @@ def encode(x, p):
         # floor). This will require two instructions. Note that we start computing
         # the new 'lo', then compute the new 'hi' using the scaled probability as
         # the offset from the new 'lo' to the new 'hi'
-        # ...
-        # ...
+        lo = lo + int(ceil(lohi_range * f[x[k]]))
+        hi = lo + int(floor(lohi_range * p[x[k]]))
+        
 
         if (lo == hi):
             raise NameError('Zero interval!')
@@ -59,8 +60,13 @@ def encode(x, p):
                 # and zero the straddle after that. In fact, HOLD OFF on doing the stretching:
                 # we will do the stretching at the end of the if statement
                 # ...  append a zero to the output list y
+                y.append(0)
+                for _ in range(straddle):
+                    y.append(1)
                 # ...  extend by a sequence of 'straddle' ones
                 # ...  zero the straddle counter
+                straddle = 0
+                
             elif lo >= half: # if hi > lo >= 1/2
                 # stretch the interval by 2 and substract 1, and output a 1 followed by 'straddle'
                 # zeros (if any) and zero straddle after that. Again, HOLD OFF on doing the stretching
@@ -69,23 +75,34 @@ def encode(x, p):
                 # bound (and don't forget that when we say "1/2" we mean the integer "half" we defined
                 # above: this is an integer arithmetic implementation!
                 # ...  append a 1 to the output list y
+                y.append(1)
                 # ...  extend 'straddle' zeros
+                for _ in range(straddle):
+                    y.append(0)
                 # ...  reset the straddle counter
-                # ...
+                straddle = 0
                 # ...  substract half from lo and hi
+                lo -= half
+                hi -= half
+
             elif lo >= quarter and hi < threequarters: # if 1/4 < lo < hi < 3/4
                 # we can increment the straddle counter and stretch the interval around
                 # the half way point. This can be impemented again as 2*(interval - 1/4),
                 # and as we will stretch by 2 after the if statement all that needs doing
                 # for now is to subtract 1/4 from the upper and lower bound
                 # ...  increment straddle
+                straddle += 1
                 # ...
                 # ...  subtract 'quarter' from lo and hi
+                lo -= quarter
+                hi -= quarter
             else:
                 break # we break the infinite loop if the interval has reached an un-stretchable state
             # now we can stretch the interval (for all 3 conditions above) by multiplying by 2
             # ...  multiply lo by 2
+            lo *= 2
             # ...  multiply hi by 2 and add 1 (I DON'T KNOW WHY +1 IS NECESSARY BUT IT IS. THIS IS MAGIC.
+            hi = 2 * hi + 1
             #      A BOX OF CHOCOLATES FOR ANYONE WHO GIVES ME A WELL ARGUED REASON FOR THIS... It seems
             #      to solve a minor precision problem.)
 
@@ -94,9 +111,15 @@ def encode(x, p):
     straddle += 1 # adding 1 to straddle for "good measure" (ensures prefix-freeness)
     if lo < quarter: # the position of lo determines the dyadic interval that fits
         # ...  append a zero followed by "straddle" ones
-        # ...
+        y.append(0)
+        for _ in range(straddle):
+            y.append(1)
     else:
         # ...  append a 1 followed by "straddle" zeros
+        y.append(1)
+
+        for _ in range(straddle):
+            y.append(0)
 
 
     return(y) # return the final output string
